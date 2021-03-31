@@ -86,6 +86,12 @@ class EEValue(float):
 
         return E_fwd(series, idx) * 10**exponent
 
+    def __str__(self):
+        return "%f" % float(self)
+
+    def __repr__(self):
+        return "EEValue(%f)" % int(self)
+
     # Arithmetic overloads
     def __add__(self, other):
         res = super(EEValue, self).__add__(other)
@@ -154,9 +160,3 @@ class EEValue(float):
     def __rpow__(self, other):
         res = super(EEValue, self).__rpow__(other)
         return self.__class__(res)
-
-    def __str__(self):
-        return "%f" % float(self)
-
-    def __repr__(self):
-        return "EEValue(%f)" % int(self)
