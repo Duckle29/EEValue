@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""A quick example / test using an EEValue for the resistor value for an imaginary LED circuit.
+"""
 
 from EEValue import EEValue as EEV
 
