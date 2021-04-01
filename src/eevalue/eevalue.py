@@ -49,7 +49,7 @@ def get_base(val: float) -> (float, float):
         exponent += 1
         val /= 10
 
-    while val < 0:
+    while val < 1:
         exponent -= 1
         val *= 10
     return val, exponent
@@ -82,9 +82,9 @@ class EEValue(float):
 
         if series in [3, 6, 12, 24]:
             if idx in cls.E24_series_overrides[0]:
-                return cls.E24_series_overrides[1][cls.E24_series_overrides[0].index(idx)] * 10**cls.exponent
+                return EEValue(cls.E24_series_overrides[1][cls.E24_series_overrides[0].index(idx)] * 10**cls.exponent)
 
-        return E_fwd(series, idx) * 10**cls.exponent
+        return EEValue(E_fwd(series, idx) * 10**cls.exponent)
 
     def __str__(cls):
         idx = cls.exponent // 3 + 8
