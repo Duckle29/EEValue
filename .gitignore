@@ -3,3 +3,5 @@ venv
 dist
 build
 src/*.egg*
+.pytest_cache
+.vscode

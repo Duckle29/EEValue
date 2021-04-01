@@ -2,21 +2,33 @@
 from math import log, floor, ceil
 
 
-def E_fwd(series: int, idx: int) -> float:
+def E_fwd(series: int, idx: int, legacy: bool = True) -> float:
     """ Returns the value for a given E-series at the given index
 
     Args:
         series (int): The E series to target
         idx (int): The index of the series to get the value of [0 to series-1]
+        legacy (bool): If it should return the legacy values for the lower E-series
 
     Returns:
         float: E-series base value
     """
+
+    E24_overrides = ((10, 11, 12, 13, 14, 15, 16, 22), (2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 8.2))
+
+    calculated_base = (10**idx)**(1 / series)  # The (range)th-root of 10^idx
+
     if series in [3, 6, 12, 24]:
-        p = 1
+        e24_idx = idx * (24 / series)
+        if e24_idx in E24_overrides[0] and legacy:
+            base = E24_overrides[1][E24_overrides[0].index(e24_idx)]
+            return base
+
+        calculated_base = round(calculated_base, 1)
     else:
-        p = 2
-    return round((10**idx)**(1 / series), p)  # Return the (range)-root of 10^idx
+        calculated_base = round(calculated_base, 2)
+
+    return calculated_base
 
 
 def E_inv(series: int, val: float) -> float:
@@ -60,19 +72,25 @@ class EEValue(float):
     Provides with automatic prefixing and standard value fitting
     """
 
-    E24_series_overrides = ((10, 11, 12, 13, 14, 15, 16, 22), (2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 8.2))
     Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
-    def __new__(cls, value):
+    def __new__(cls, value, precision=2):
+        cls.precision = precision
         cls.base, cls.exponent = get_base(float(value))
         return super(EEValue, EEValue).__new__(cls, value)
 
     def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True) -> float:
+        exponent = max(-8, min(cls.exponent, 8))
 
         idx = E_inv(series, cls.base)
 
         if mode == "round":
             idx = round(idx)
+            if series in [3, 6, 12, 24]:
+                vals = (abs(cls.base - E_fwd(series, idx - 1, legacy)), abs(cls.base - E_fwd(series, idx, legacy)),
+                        abs(cls.base - E_fwd(series, idx + 1, legacy)))
+                idx += vals.index(min(vals)) - 1
+
         elif mode == "ceil":
             idx = ceil(idx)
         elif mode == "floor":
@@ -80,20 +98,17 @@ class EEValue(float):
         else:
             raise ValueError('Mode has to be either "round", "ceil" or "floor". {} is not a valid mode'.format(mode))
 
-        if series in [3, 6, 12, 24]:
-            if idx in cls.E24_series_overrides[0]:
-                return EEValue(cls.E24_series_overrides[1][cls.E24_series_overrides[0].index(idx)] * 10**cls.exponent)
-
-        return EEValue(E_fwd(series, idx) * 10**cls.exponent)
+        return EEValue(E_fwd(series, idx, legacy) * 10**exponent)
 
     def __str__(cls):
-        idx = cls.exponent // 3 + 8
+        exponent = max(-24, min(cls.exponent, 24))
+        idx = exponent // 3 + 8
         prefix = cls.Si_prefixes[idx]
         val = float(cls) / 10**((idx - 8) * 3)  # We do this to keep to 3 orders of magnitude
-        return "%.2f %s" % (val, prefix)
+        return "{:.{}f} {}".format(val, cls.precision, prefix)
 
     def __repr__(cls):
-        return "EEValue(%f)" % int(cls)
+        return "EEValue({})".format(float(cls))
 
     # Arithmetic overloads
     def __add__(cls, other):
