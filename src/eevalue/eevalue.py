@@ -61,15 +61,15 @@ class EEValue(float):
     """
 
     E24_series_overrides = ((10, 11, 12, 13, 14, 15, 16, 22), (2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 8.2))
+    Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
     def __new__(cls, value):
+        cls.base, cls.exponent = get_base(float(value))
         return super(EEValue, EEValue).__new__(cls, value)
 
-    def E(self, series: int = 96, mode: str = 'round', legacy: bool = True) -> float:
+    def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True) -> float:
 
-        val = float(self)
-        base, exponent = get_base(val)
-        idx = E_inv(series, base)
+        idx = E_inv(series, cls.base)
 
         if mode == "round":
             idx = round(idx)
@@ -81,82 +81,85 @@ class EEValue(float):
             raise ValueError('Mode has to be either "round", "ceil" or "floor". {} is not a valid mode'.format(mode))
 
         if series in [3, 6, 12, 24]:
-            if idx in self.E24_series_overrides[0]:
-                return self.E24_series_overrides[1][self.E24_series_overrides[0].index(idx)] * 10**exponent
+            if idx in cls.E24_series_overrides[0]:
+                return cls.E24_series_overrides[1][cls.E24_series_overrides[0].index(idx)] * 10**cls.exponent
 
-        return E_fwd(series, idx) * 10**exponent
+        return E_fwd(series, idx) * 10**cls.exponent
 
-    def __str__(self):
-        return "%f" % float(self)
+    def __str__(cls):
+        idx = cls.exponent // 3 + 8
+        prefix = cls.Si_prefixes[idx]
+        val = float(cls) / 10**((idx - 8) * 3)  # We do this to keep to 3 orders of magnitude
+        return "%.2f %s" % (val, prefix)
 
-    def __repr__(self):
-        return "EEValue(%f)" % int(self)
+    def __repr__(cls):
+        return "EEValue(%f)" % int(cls)
 
     # Arithmetic overloads
-    def __add__(self, other):
-        res = super(EEValue, self).__add__(other)
-        return self.__class__(res)
+    def __add__(cls, other):
+        res = super(EEValue, cls).__add__(other)
+        return cls.__class__(res)
 
-    def __sub__(self, other):
-        res = super(EEValue, self).__sub__(other)
-        return self.__class__(res)
+    def __sub__(cls, other):
+        res = super(EEValue, cls).__sub__(other)
+        return cls.__class__(res)
 
-    def __mul__(self, other):
-        res = super(EEValue, self).__mul__(other)
-        return self.__class__(res)
+    def __mul__(cls, other):
+        res = super(EEValue, cls).__mul__(other)
+        return cls.__class__(res)
 
-    def __div__(self, other):
-        res = super(EEValue, self).__div__(other)
-        return self.__class__(res)
+    def __div__(cls, other):
+        res = super(EEValue, cls).__div__(other)
+        return cls.__class__(res)
 
-    def __floordiv__(self, other):
-        res = super(EEValue, self).__floordiv__(other)
-        return self.__class__(res)
+    def __floordiv__(cls, other):
+        res = super(EEValue, cls).__floordiv__(other)
+        return cls.__class__(res)
 
-    def __truediv__(self, other):
-        res = super(EEValue, self).__truediv__(other)
-        return self.__class__(res)
+    def __truediv__(cls, other):
+        res = super(EEValue, cls).__truediv__(other)
+        return cls.__class__(res)
 
-    def __mod__(self, other):
-        res = super(EEValue, self).__mod__(other)
-        return self.__class__(res)
+    def __mod__(cls, other):
+        res = super(EEValue, cls).__mod__(other)
+        return cls.__class__(res)
 
-    def __divmod__(self, other):
-        res = super(EEValue, self).__divmod__(other)
-        return self.__class__(res)
+    def __divmod__(cls, other):
+        res = super(EEValue, cls).__divmod__(other)
+        return cls.__class__(res)
 
-    def __pow__(self, other):
-        res = super(EEValue, self).__pow__(other)
-        return self.__class__(res)
+    def __pow__(cls, other):
+        res = super(EEValue, cls).__pow__(other)
+        return cls.__class__(res)
 
-    def __radd__(self, other):
-        res = super(EEValue, self).__radd__(other)
-        return self.__class__(res)
+    def __radd__(cls, other):
+        res = super(EEValue, cls).__radd__(other)
+        return cls.__class__(res)
 
-    def __rsub__(self, other):
-        res = super(EEValue, self).__rsub__(other)
-        return self.__class__(res)
+    def __rsub__(cls, other):
+        res = super(EEValue, cls).__rsub__(other)
+        return cls.__class__(res)
 
-    def __rmul__(self, other):
-        res = super(EEValue, self).__rmul__(other)
-        return self.__class__(res)
+    def __rmul__(cls, other):
+        res = super(EEValue, cls).__rmul__(other)
+        return cls.__class__(res)
 
-    def __rfloordiv__(self, other):
-        res = super(EEValue, self).__rfloordiv__(other)
-        return self.__class__(res)
+    def __rfloordiv__(cls, other):
+        res = super(EEValue, cls).__rfloordiv__(other)
+        return cls.__class__(res)
 
-    def __rtruediv__(self, other):
-        res = super(EEValue, self).__rtruediv__(other)
-        return self.__class__(res)
+    def __rtruediv__(cls, other):
+        res = super(EEValue, cls).__rtruediv__(other)
+        return cls.__class__(res)
 
-    def __rmod__(self, other):
-        res = super(EEValue, self).__rmod__(other)
-        return self.__class__(res)
+    def __rmod__(cls, other):
+        res = super(EEValue, cls).__rmod__(other)
+        return cls.__class__(res)
 
-    def __rdivmod__(self, other):
-        res = super(EEValue, self).__rdivmod__(other)
-        return self.__class__(res)
+    def __rdivmod__(cls, other):
+        res = super(EEValue, cls).__rdivmod__(other)
+        return cls.__class__(res)
 
-    def __rpow__(self, other):
-        res = super(EEValue, self).__rpow__(other)
-        return self.__class__(res)
+    def __rpow__(cls, other):
+        res = super(EEValue, cls).__rpow__(other)
+        return cls.__class__(res)
