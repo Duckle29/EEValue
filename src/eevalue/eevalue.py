@@ -75,9 +75,10 @@ class EEValue(float):
     Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
     def __new__(cls, value, precision=2):
-        cls.precision = precision
-        cls.base, cls.exponent = get_base(float(value))
-        return super(EEValue, EEValue).__new__(cls, value)
+        new_cls = super(EEValue, EEValue).__new__(cls, value)
+        new_cls.precision = precision
+        new_cls.base, new_cls.exponent = get_base(float(value))
+        return new_cls
 
     def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True) -> float:
         exponent = max(-8, min(cls.exponent, 8))

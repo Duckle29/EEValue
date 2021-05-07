@@ -30,3 +30,16 @@ def test_si_prefixes():
 
     assert str(EEV(3.1 * 10**-28, 5)) == "0.00031 y"
     assert str(EEV(3.1 * 10**28, 5)) == "31000.00000 Y"
+
+
+def test_instance_corruption():
+    A = EEV(10)
+    B = EEV(30E-3)
+    C = EEV(0.1)
+
+    foo = B / C
+    x = str(foo)
+    10E-6 / A
+    y = str(foo)
+
+    assert x == y
