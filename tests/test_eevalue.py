@@ -44,8 +44,8 @@ def test_instance_corruption():
 
     assert x == y
 
+
 def test_instanciation():
     values = []
-    for i in range(-10,10):
+    for i in range(-10, 10):
         values.append(EEV(i/2))
-        

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from math import log, floor, ceil
+from typing import Tuple
 
 
 def E_fwd(series: int, idx: int, legacy: bool = True) -> float:
@@ -45,7 +46,7 @@ def E_inv(series: int, val: float) -> float:
     return log(val**series) / log(10)
 
 
-def get_base(val: float) -> (float, float):
+def get_base(val: float) -> Tuple[float, float]:
     """Get the base of a float [0-10[ float
 
     Args:
@@ -56,12 +57,14 @@ def get_base(val: float) -> (float, float):
         float: The exponent the value was reduced by. Negative for <0 values
     """
 
+    val = abs(val)
+
     exponent = 0
     while val >= 10:
         exponent += 1
         val /= 10
 
-    while val < 1:
+    while val < 1 and val != 0:
         exponent -= 1
         val *= 10
     return val, exponent
