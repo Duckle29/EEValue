@@ -49,3 +49,36 @@ def test_instanciation():
     values = []
     for i in range(-10, 10):
         values.append(EEV(i/2))
+        
+
+def test_precision():
+    re_pattern = re.compile(r'\.(\d*)')
+    precision = 5
+
+    strings = [
+        [precision, [
+            str(EEV(0.12345, precision)),
+            str(EEV(0.12345, precision) ** 2),
+            str(EEV(0.12345, precision) * 2),
+            str(EEV(0.12345, precision) / 2),
+            str(EEV(0.12345, precision) + 2),
+            str(EEV(0.12345, precision) - 2),
+            ]
+        ],
+
+        [precision +1, [
+            str(EEV(0.12345, precision+1)),
+            str(EEV(0.12345, precision) ** EEV(2, precision + 1)),
+            str(EEV(0.12345, precision) * EEV(2, precision + 1)),
+            str(EEV(0.12345, precision) / EEV(2, precision + 1)),
+            str(EEV(0.12345, precision) + EEV(2, precision + 1)),
+            str(EEV(0.12345, precision) - EEV(2, precision + 1))
+            ]
+        ]
+    ]
+
+    for precision in strings:
+        for string in precision[1]:
+            result = re.search(re_pattern, string)
+            assert len(result.group(1)) == precision[0]
+
