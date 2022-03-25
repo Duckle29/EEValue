@@ -114,71 +114,78 @@ class EEValue(float):
     def __repr__(cls):
         return "EEValue({})".format(float(cls))
 
+    def re_wrap(self, A, B, res):
+        precision = A.precision
+        if B.__class__.__name__ == 'EEValue':
+            if B.precision > precision:
+                precision = B.precision
+        return self.__class__(res, precision)
+
     # Arithmetic overloads
-    def __add__(cls, other):
-        res = super(EEValue, cls).__add__(other)
-        return cls.__class__(res)
+    def __add__(self, other):
+        res = super(EEValue, self).__add__(other)
+        return self.re_wrap(self, other, res)
 
-    def __sub__(cls, other):
-        res = super(EEValue, cls).__sub__(other)
-        return cls.__class__(res)
+    def __sub__(self, other):
+        res = super(EEValue, self).__sub__(other)
+        return self.re_wrap(self, other, res)
 
-    def __mul__(cls, other):
-        res = super(EEValue, cls).__mul__(other)
-        return cls.__class__(res)
+    def __mul__(self, other):
+        res = super(EEValue, self).__mul__(other)
+        return self.re_wrap(self, other, res)
 
-    def __div__(cls, other):
-        res = super(EEValue, cls).__div__(other)
-        return cls.__class__(res)
+    def __div__(self, other):
+        res = super(EEValue, self).__div__(other)
+        return self.re_wrap(self, other, res)
 
-    def __floordiv__(cls, other):
-        res = super(EEValue, cls).__floordiv__(other)
-        return cls.__class__(res)
+    def __floordiv__(self, other):
+        res = super(EEValue, self).__floordiv__(other)
+        return self.re_wrap(self, other, res)
 
-    def __truediv__(cls, other):
-        res = super(EEValue, cls).__truediv__(other)
-        return cls.__class__(res)
+    def __truediv__(self, other):
+        res = super(EEValue, self).__truediv__(other)
+        return self.re_wrap(self, other, res)
 
-    def __mod__(cls, other):
-        res = super(EEValue, cls).__mod__(other)
-        return cls.__class__(res)
+    def __mod__(self, other):
+        res = super(EEValue, self).__mod__(other)
+        return self.re_wrap(self, other, res)
 
-    def __divmod__(cls, other):
-        res = super(EEValue, cls).__divmod__(other)
-        return cls.__class__(res)
+    def __divmod__(self, other):
+        res = super(EEValue, self).__divmod__(other)
+        return self.re_wrap(self, other, res)
 
-    def __pow__(cls, other):
-        res = super(EEValue, cls).__pow__(other)
-        return cls.__class__(res)
+    def __pow__(self, other):
+        res = super(EEValue, self).__pow__(other)
+        return self.re_wrap(self, other, res)
 
-    def __radd__(cls, other):
-        res = super(EEValue, cls).__radd__(other)
-        return cls.__class__(res)
+    def __radd__(self, other):
+        res = super(EEValue, self).__radd__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rsub__(cls, other):
-        res = super(EEValue, cls).__rsub__(other)
-        return cls.__class__(res)
+    def __rsub__(self, other):
+        res = super(EEValue, self).__rsub__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rmul__(cls, other):
-        res = super(EEValue, cls).__rmul__(other)
-        return cls.__class__(res)
+    def __rmul__(self, other):
+        res = super(EEValue, self).__rmul__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rfloordiv__(cls, other):
-        res = super(EEValue, cls).__rfloordiv__(other)
-        return cls.__class__(res)
+    def __rfloordiv__(self, other):
+        res = super(EEValue, self).__rfloordiv__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rtruediv__(cls, other):
-        res = super(EEValue, cls).__rtruediv__(other)
-        return cls.__class__(res)
+    def __rtruediv__(self, other):
+        res = super(EEValue, self).__rtruediv__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rmod__(cls, other):
-        res = super(EEValue, cls).__rmod__(other)
-        return cls.__class__(res)
+    def __rmod__(self, other):
+        res = super(EEValue, self).__rmod__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rdivmod__(cls, other):
-        res = super(EEValue, cls).__rdivmod__(other)
-        return cls.__class__(res)
+    def __rdivmod__(self, other):
+        res = super(EEValue, self).__rdivmod__(other)
+        return self.re_wrap(self, other, res)
 
-    def __rpow__(cls, other):
-        res = super(EEValue, cls).__rpow__(other)
-        return cls.__class__(res)
+    def __rpow__(self, other):
+        res = super(EEValue, self).__rpow__(other)
+        return self.re_wrap(self, other, res)
