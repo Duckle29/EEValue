@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 from math import log, floor, ceil
 from typing import Tuple
+import re
+
+
+Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
 
 def E_fwd(series: int, idx: int, legacy: bool = True) -> float:
@@ -70,14 +74,62 @@ def get_base(val: float) -> Tuple[float, float]:
     return val, exponent
 
 
+def eestr_to_float(value: str) -> float:
+    """Takes a common EE value such as 4k7 or 4.7k and converts it to a float
+
+    Args:
+        value (str): The str representation of the value
+
+    Returns:
+        float: _description_
+    """
+
+    prefix_dict = {key: (value-8)*3 for (value, key) in enumerate(Si_prefixes)}
+    # Aliases
+    prefix_dict['u'] = prefix_dict['µ']
+    prefix_dict['r'] = prefix_dict['']
+    prefix_dict['R'] = prefix_dict['r']
+    prefix_dict['K'] = prefix_dict['k']
+
+    regex_str = r'(y|z|a|f|p|n|µ|m|k|K|M|G|T|P|E|Z|Y|u|r|R|\.)'
+    split_val = re.split(regex_str, value)
+
+    try:
+        split_val.remove('')
+    except ValueError:
+        pass
+
+    base = split_val[0]
+    if len(split_val) == 1:
+        return float(base)
+
+    if split_val[1] == '.':
+        decimal = split_val[2]
+        if len(split_val) == 4:
+            exponent = prefix_dict[split_val[3]]
+        else:
+            exponent = 0
+    else:
+        exponent = prefix_dict[split_val[1]]
+        if len(split_val) == 3:
+            decimal = split_val[2]
+        else:
+            decimal = '0'
+
+    result = float(base + '.' + decimal) * 10**exponent
+
+    return result
+
+
 class EEValue(float):
     """ Class that provides EE friendly numbers
     Provides with automatic prefixing and standard value fitting
     """
 
-    Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
-
     def __new__(cls, value, precision=2):
+        if isinstance(value, str):
+            value = eestr_to_float(value)
+
         new_cls = super(EEValue, EEValue).__new__(cls, value)
         new_cls.precision = precision
         new_cls.base, new_cls.exponent = get_base(float(value))
@@ -107,7 +159,7 @@ class EEValue(float):
     def __str__(cls):
         exponent = max(-24, min(cls.exponent, 24))
         idx = exponent // 3 + 8
-        prefix = cls.Si_prefixes[idx]
+        prefix = Si_prefixes[idx]
         val = float(cls) / 10**((idx - 8) * 3)  # We do this to keep to 3 orders of magnitude
         return "{:.{}f} {}".format(val, cls.precision, prefix)
 
