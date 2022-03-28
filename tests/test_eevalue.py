@@ -50,30 +50,32 @@ def test_instanciation():
     values = []
     for i in range(-10, 10):
         values.append(EEV(i/2))
-        
+
 
 def test_precision():
     re_pattern = re.compile(r'\.(\d*)')
     precision = 5
 
     strings = [
-        [precision, [
-            str(EEV(0.12345, precision)),
-            str(EEV(0.12345, precision) ** 2),
-            str(EEV(0.12345, precision) * 2),
-            str(EEV(0.12345, precision) / 2),
-            str(EEV(0.12345, precision) + 2),
-            str(EEV(0.12345, precision) - 2),
+        [
+            precision, [
+                str(EEV(0.12345, precision)),
+                str(EEV(0.12345, precision) ** 2),
+                str(EEV(0.12345, precision) * 2),
+                str(EEV(0.12345, precision) / 2),
+                str(EEV(0.12345, precision) + 2),
+                str(EEV(0.12345, precision) - 2),
             ]
         ],
 
-        [precision +1, [
-            str(EEV(0.12345, precision+1)),
-            str(EEV(0.12345, precision) ** EEV(2, precision + 1)),
-            str(EEV(0.12345, precision) * EEV(2, precision + 1)),
-            str(EEV(0.12345, precision) / EEV(2, precision + 1)),
-            str(EEV(0.12345, precision) + EEV(2, precision + 1)),
-            str(EEV(0.12345, precision) - EEV(2, precision + 1))
+        [
+            precision + 1, [
+                str(EEV(0.12345, precision+1)),
+                str(EEV(0.12345, precision) ** EEV(2, precision + 1)),
+                str(EEV(0.12345, precision) * EEV(2, precision + 1)),
+                str(EEV(0.12345, precision) / EEV(2, precision + 1)),
+                str(EEV(0.12345, precision) + EEV(2, precision + 1)),
+                str(EEV(0.12345, precision) - EEV(2, precision + 1))
             ]
         ]
     ]
@@ -83,3 +85,18 @@ def test_precision():
             result = re.search(re_pattern, string)
             assert len(result.group(1)) == precision[0]
 
+
+def test_str_notation():
+    strs = [
+        ['2k7', 2700],
+        ['47k', 47E3],
+        ['82K', 82E3],
+        ['4.7k', 4700],
+        ['2700', 2700],
+        ['2.7', 2.7],
+        ['2R7', 2.7],
+        ['2r7', 2.7]
+        ]
+
+    for teststr in strs:
+        assert EEV(teststr[0]) == EEV(teststr[1])
