@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from math import log, floor, ceil
-from typing import Tuple
+from typing import Tuple, Iterable
 import re
 
 
@@ -90,8 +90,10 @@ def eestr_to_float(value: str) -> float:
     prefix_dict['r'] = prefix_dict['']
     prefix_dict['R'] = prefix_dict['r']
     prefix_dict['K'] = prefix_dict['k']
+    prefix_dict['A'] = prefix_dict['']
+    prefix_dict['V'] = prefix_dict['']
 
-    regex_str = r'(y|z|a|f|p|n|µ|m|k|K|M|G|T|P|E|Z|Y|u|r|R|\.)'
+    regex_str = r'(y|z|a|f|p|n|µ|m|k|K|M|G|T|P|E|Z|Y|u|r|R|A|V|\.)'
     split_val = re.split(regex_str, value)
 
     try:
@@ -121,6 +123,18 @@ def eestr_to_float(value: str) -> float:
     return result
 
 
+def get_E_series(series: int) -> Iterable[int]:
+        """Returns an iterable of the particular E series base values
+
+        Args:
+            series (int): The E series you want the base range for
+
+        Returns:
+            Iterable[int]: An iterable of the series
+        """
+        return (E_fwd(series, idx) for idx in range(series))
+
+
 class EEValue(float):
     """ Class that provides EE friendly numbers
     Provides with automatic prefixing and standard value fitting
@@ -135,7 +149,20 @@ class EEValue(float):
         new_cls.base, new_cls.exponent = get_base(float(value))
         return new_cls
 
-    def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True) -> float:
+    def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True) -> 'EEValue':
+        """Get an E series value for the EEValue
+
+        Args:
+            series (int, optional): The series to get the value from. Defaults to 96.
+            mode (str, optional): Which way to round. Can be: 'ceil', 'floor' or 'round'. Defaults to 'round'.
+            legacy (bool, optional): If you want to use the legacy substituations in E24 and lower ranges. Defaults to True.
+
+        Raises:
+            ValueError: Raises if invalid mode is supplied
+
+        Returns:
+            EEValue: An EEValue of the desired E series value
+        """
         exponent = max(-8, min(cls.exponent, 8))
 
         idx = E_inv(series, cls.base)
