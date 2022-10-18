@@ -125,15 +125,15 @@ def eestr_to_float(value: str) -> float:
 
 
 def get_E_series(series: int) -> Iterable[int]:
-        """Returns an iterable of the particular E series base values
+    """Returns an iterable of the particular E series base values
 
-        Args:
-            series (int): The E series you want the base range for
+    Args:
+        series (int): The E series you want the base range for
 
-        Returns:
-            Iterable[int]: An iterable of the series
-        """
-        return (E_fwd(series, idx) for idx in range(series))
+    Returns:
+        Iterable[int]: An iterable of the series
+    """
+    return (E_fwd(series, idx) for idx in range(series))
 
 
 class EEValue(float):
