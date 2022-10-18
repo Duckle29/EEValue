@@ -92,8 +92,9 @@ def eestr_to_float(value: str) -> float:
     prefix_dict['K'] = prefix_dict['k']
     prefix_dict['A'] = prefix_dict['']
     prefix_dict['V'] = prefix_dict['']
+    prefix_dict['v'] = prefix_dict['']
 
-    regex_str = r'(y|z|a|f|p|n|µ|m|k|K|M|G|T|P|E|Z|Y|u|r|R|A|V|\.)'
+    regex_str = r'(y|z|a|f|p|n|µ|m|k|K|M|G|T|P|E|Z|Y|u|r|R|A|V|v|\.)'
     split_val = re.split(regex_str, value)
 
     try:
