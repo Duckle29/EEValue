@@ -96,7 +96,7 @@ def test_str_notation():
         ['2.7', 2.7],
         ['2R7', 2.7],
         ['2r7', 2.7]
-        ]
+    ]
 
     for teststr in strs:
         assert EEV(teststr[0]) == EEV(teststr[1])
