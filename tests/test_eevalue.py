@@ -44,6 +44,13 @@ def test_instance_corruption():
     y = str(foo)
 
     assert x == y
+    
+
+def test_no_clamping():
+    assert str(EEV('14y')).E(24) == '15.00 y'
+    assert str(EEV('14y')).E(96) == '14.00 y'
+    assert str(EEV('14Y')).E(24) == '13.00 Y'
+    assert str(EEV('14Y')).E(96) == '14.00 Y'
 
 
 def test_instanciation():
