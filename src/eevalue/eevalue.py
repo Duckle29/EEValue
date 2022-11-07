@@ -164,7 +164,6 @@ class EEValue(float):
         Returns:
             EEValue: An EEValue of the desired E series value
         """
-        exponent = max(-8, min(cls.exponent, 8))
 
         idx = E_inv(series, cls.base)
 
@@ -182,7 +181,7 @@ class EEValue(float):
         else:
             raise ValueError('Mode has to be either "round", "ceil" or "floor". {} is not a valid mode'.format(mode))
 
-        return EEValue(E_fwd(series, idx, legacy) * 10**exponent)
+        return EEValue(E_fwd(series, idx, legacy) * 10**cls.exponent)
 
     def __str__(cls):
         exponent = max(-24, min(cls.exponent, 24))
