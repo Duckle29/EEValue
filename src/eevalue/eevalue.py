@@ -7,13 +7,14 @@ import re
 Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
 
-def E_fwd(series: int, idx: int, legacy: bool = True) -> float:
+def E_fwd(series: int, idx: int, legacy: bool = True, round_base = True) -> float:
     """ Returns the value for a given E-series at the given index
 
     Args:
         series (int): The E series to target
         idx (int): The index of the series to get the value of [0 to series-1]
         legacy (bool): If it should return the legacy values for the lower E-series
+        round_base (bool): If result should be rounded
 
     Returns:
         float: E-series base value
@@ -21,7 +22,9 @@ def E_fwd(series: int, idx: int, legacy: bool = True) -> float:
 
     E24_overrides = ((10, 11, 12, 13, 14, 15, 16, 22), (2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 8.2))
 
-    calculated_base = (10**idx)**(1 / series)  # The (range)th-root of 10^idx
+    calculated_base = (10**idx)**(1.0/ series)  # The (range)th-root of 10^idx
+
+    digits = 2
 
     if series in [3, 6, 12, 24]:
         e24_idx = idx * (24 / series)
@@ -29,9 +32,10 @@ def E_fwd(series: int, idx: int, legacy: bool = True) -> float:
             base = E24_overrides[1][E24_overrides[0].index(e24_idx)]
             return base
 
-        calculated_base = round(calculated_base, 1)
-    else:
-        calculated_base = round(calculated_base, 2)
+        digits = 1
+    
+    if round_base:
+        calculated_base = round(calculated_base, digits)
 
     return calculated_base
 
@@ -141,22 +145,24 @@ class EEValue(float):
     Provides with automatic prefixing and standard value fitting
     """
 
-    def __new__(cls, value, precision=2):
+    def __new__(cls, value, precision=2, unit=''):
         if isinstance(value, str):
             value = eestr_to_float(value)
 
         new_cls = super(EEValue, EEValue).__new__(cls, value)
         new_cls.precision = precision
         new_cls.base, new_cls.exponent = get_base(float(value))
+        new_cls.unit = unit
         return new_cls
 
-    def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True) -> 'EEValue':
+    def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True, give_error = False) -> 'EEValue' | Tuple[float, 'EEValue']:
         """Get an E series value for the EEValue
 
         Args:
             series (int, optional): The series to get the value from. Defaults to 96.
             mode (str, optional): Which way to round. Can be: 'ceil', 'floor' or 'round'. Defaults to 'round'.
             legacy (bool, optional): If you want to use the legacy substituations in E24 and lower ranges. Defaults to True.
+            give_error (bool, optional): If you want to return the error from the original value as a factor. Defaults to False.
 
         Raises:
             ValueError: Raises if invalid mode is supplied
@@ -164,9 +170,12 @@ class EEValue(float):
         Returns:
             EEValue: An EEValue of the desired E series value
         """
+        #exponent = max(-24, min(cls.exponent, 24))
+        exponent = cls.exponent
 
         idx = E_inv(series, cls.base)
 
+        calculated_base = E_fwd(series, idx, False, False)
         if mode == "round":
             idx = round(idx)
             if series in [3, 6, 12, 24]:
@@ -174,21 +183,45 @@ class EEValue(float):
                         abs(cls.base - E_fwd(series, idx + 1, legacy)))
                 idx += vals.index(min(vals)) - 1
 
+        if mode == "floor":
+            base = calculated_base
+            while base >= calculated_base:
+                base = E_fwd(series, floor(idx))
+                idx -= 1
+                if idx < -24:
+                    raise ValueError("Runaway floor")
+
         elif mode == "ceil":
-            idx = ceil(idx)
-        elif mode == "floor":
-            idx = floor(idx)
+            base = calculated_base
+            while base <= calculated_base:
+                base = E_fwd(series, floor(idx))
+                idx += 1   
+                if idx > 24:
+                    raise ValueError("Runaway ceil")
         else:
             raise ValueError('Mode has to be either "round", "ceil" or "floor". {} is not a valid mode'.format(mode))
+        
+        res = EEValue(base * 10**exponent, precision=cls.precision, unit=cls.unit)
 
-        return EEValue(E_fwd(series, idx, legacy) * 10**cls.exponent)
+        # Because E24 and lower series have some legacy values. This is necesary to ensure you get expected behaviour.
+        if mode == 'floor' and res > cls:
+            res = EEValue(E_fwd(series, idx-1, legacy) * 10**exponent, precision=cls.precision, unit=cls.unit)
+
+        if mode == 'ceil' and res < cls:
+            res = EEValue(E_fwd(series, idx+1, legacy) * 10**exponent, precision=cls.precision, unit=cls.unit)
+        
+        if give_error:
+            error = res / cls
+            return error, res
+
+        return res
 
     def __str__(cls):
         exponent = max(-24, min(cls.exponent, 24))
         idx = exponent // 3 + 8
         prefix = Si_prefixes[idx]
         val = float(cls) / 10**((idx - 8) * 3)  # We do this to keep to 3 orders of magnitude
-        return "{:.{}f} {}".format(val, cls.precision, prefix)
+        return "{:.{}f} {}{}".format(val, cls.precision, prefix, cls.unit)
 
     def __repr__(cls):
         return "EEValue({})".format(float(cls))
