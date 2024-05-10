@@ -154,7 +154,7 @@ class EEValue(float):
         return new_cls
 
     def E(cls, series: int = 96, mode: str = 'round',
-          legacy: bool = True, give_error: bool = False) -> 'EEValue' | Tuple[float, 'EEValue']:
+          legacy: bool = True, give_error: bool = False) -> 'EEValue':
         """Get an E series value for the EEValue
 
         Args:
