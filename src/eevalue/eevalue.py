@@ -7,14 +7,14 @@ import re
 Si_prefixes = ('y', 'z', 'a', 'f', 'p', 'n', 'µ', 'm', '', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y')
 
 
-def E_fwd(series: int, idx: int, legacy: bool = True, round_base = True) -> float:
+def E_fwd(series: int, idx: int, legacy: bool = True, round_base: bool = True) -> float:
     """ Returns the value for a given E-series at the given index
 
     Args:
         series (int): The E series to target
         idx (int): The index of the series to get the value of [0 to series-1]
         legacy (bool): If it should return the legacy values for the lower E-series
-        round_base (bool): If result should be rounded
+        round_base (bool): If result should be rounded.
 
     Returns:
         float: E-series base value
@@ -22,18 +22,16 @@ def E_fwd(series: int, idx: int, legacy: bool = True, round_base = True) -> floa
 
     E24_overrides = ((10, 11, 12, 13, 14, 15, 16, 22), (2.7, 3.0, 3.3, 3.6, 3.9, 4.3, 4.7, 8.2))
 
-    calculated_base = (10**idx)**(1.0/ series)  # The (range)th-root of 10^idx
+    calculated_base = (10 ** idx) ** (1.0 / series)  # The (range)th-root of 10^idx
 
     digits = 2
 
-    if series in [3, 6, 12, 24]:
+    if series <= 24:
+        digits = 1
         e24_idx = idx * (24 / series)
         if e24_idx in E24_overrides[0] and legacy:
-            base = E24_overrides[1][E24_overrides[0].index(e24_idx)]
-            return base
+            calculated_base = E24_overrides[1][E24_overrides[0].index(e24_idx)]
 
-        digits = 1
-    
     if round_base:
         calculated_base = round(calculated_base, digits)
 
@@ -155,14 +153,15 @@ class EEValue(float):
         new_cls.unit = unit
         return new_cls
 
-    def E(cls, series: int = 96, mode: str = 'round', legacy: bool = True, give_error = False) -> 'EEValue' | Tuple[float, 'EEValue']:
+    def E(cls, series: int = 96, mode: str = 'round',
+          legacy: bool = True, give_error: bool = False) -> 'EEValue' | Tuple[float, 'EEValue']:
         """Get an E series value for the EEValue
 
         Args:
-            series (int, optional): The series to get the value from. Defaults to 96.
-            mode (str, optional): Which way to round. Can be: 'ceil', 'floor' or 'round'. Defaults to 'round'.
-            legacy (bool, optional): If you want to use the legacy substituations in E24 and lower ranges. Defaults to True.
-            give_error (bool, optional): If you want to return the error from the original value as a factor. Defaults to False.
+           series (int, optional): The series to get the value from. Defaults to 96.
+           mode (str, optional): Which way to round. Can be: 'ceil', 'floor' or 'round'. Defaults to 'round'.
+           legacy (bool, optional): If you want to use the legacy substituations in E24 and lower ranges. Defaults to True.
+           give_error (bool, optional): If you want to return the error from the original value as a factor. Defaults to False.
 
         Raises:
             ValueError: Raises if invalid mode is supplied
@@ -170,37 +169,43 @@ class EEValue(float):
         Returns:
             EEValue: An EEValue of the desired E series value
         """
-        #exponent = max(-24, min(cls.exponent, 24))
+        # exponent = max(-24, min(cls.exponent, 24))
         exponent = cls.exponent
 
         idx = E_inv(series, cls.base)
-
         calculated_base = E_fwd(series, idx, False, False)
-        if mode == "round":
-            idx = round(idx)
-            if series in [3, 6, 12, 24]:
-                vals = (abs(cls.base - E_fwd(series, idx - 1, legacy)), abs(cls.base - E_fwd(series, idx, legacy)),
-                        abs(cls.base - E_fwd(series, idx + 1, legacy)))
-                idx += vals.index(min(vals)) - 1
 
-        if mode == "floor":
-            base = calculated_base
-            while base >= calculated_base:
+        if mode == "round":
+            val_distances = (
+                abs(cls.base - E_fwd(series, int(idx) - 1, legacy)),
+                abs(cls.base - E_fwd(series, int(idx), legacy)),
+                abs(cls.base - E_fwd(series, int(idx) + 1, legacy))
+            )
+            val_bases = (
+                E_fwd(series, int(idx) - 1, legacy),
+                E_fwd(series, int(idx), legacy),
+                E_fwd(series, int(idx) + 1, legacy)
+            )
+            base = val_bases[val_distances.index(min(val_distances))]
+
+        elif mode == "floor":
+            base = E_fwd(series, floor(idx))
+            while base > calculated_base:
                 base = E_fwd(series, floor(idx))
                 idx -= 1
-                if idx < -24:
+                if idx < series * -1:
                     raise ValueError("Runaway floor")
 
         elif mode == "ceil":
-            base = calculated_base
-            while base <= calculated_base:
-                base = E_fwd(series, floor(idx))
-                idx += 1   
-                if idx > 24:
+            base = E_fwd(series, floor(idx))
+            while base < calculated_base:
+                base = E_fwd(series, ceil(idx))
+                idx += 1
+                if idx > series:
                     raise ValueError("Runaway ceil")
         else:
             raise ValueError('Mode has to be either "round", "ceil" or "floor". {} is not a valid mode'.format(mode))
-        
+
         res = EEValue(base * 10**exponent, precision=cls.precision, unit=cls.unit)
 
         # Because E24 and lower series have some legacy values. This is necesary to ensure you get expected behaviour.
@@ -209,7 +214,7 @@ class EEValue(float):
 
         if mode == 'ceil' and res < cls:
             res = EEValue(E_fwd(series, idx+1, legacy) * 10**exponent, precision=cls.precision, unit=cls.unit)
-        
+
         if give_error:
             error = res / cls
             return error, res
