@@ -107,3 +107,8 @@ def test_str_notation():
 
     for teststr in strs:
         assert EEV(teststr[0]) == EEV(teststr[1])
+
+def test_unit_preservervation():
+    assert (EEV(10, unit='V') * 5).unit == 'V'
+    assert (EEV(10, unit='V') * EEV(10, unit='V')).unit == 'V'
+    assert (EEV(10, unit='V') * EEV(10, unit='A')).unit == ''

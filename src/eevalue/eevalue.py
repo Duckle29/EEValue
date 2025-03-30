@@ -233,10 +233,14 @@ class EEValue(float):
 
     def re_wrap(self, A, B, res):
         precision = A.precision
+        unit = A.unit
         if B.__class__.__name__ == 'EEValue':
             if B.precision > precision:
                 precision = B.precision
-        return self.__class__(res, precision)
+            if B.unit != '' and B.unit != A.unit:
+                unit = ''
+
+        return self.__class__(res, precision, unit)
 
     # Arithmetic overloads
     def __add__(self, other):
