@@ -193,16 +193,22 @@ class EEValue(float):
             while base > calculated_base:
                 base = E_fwd(series, floor(idx))
                 idx -= 1
-                if idx < series * -1:
-                    raise ValueError("Runaway floor")
+                if idx <= series * -1:
+                    idx = 0
+                    base = E_fwd(series, 0)
+                    exponent -= 1
+                    break
 
         elif mode == "ceil":
             base = E_fwd(series, floor(idx))
             while base < calculated_base:
                 base = E_fwd(series, ceil(idx))
                 idx += 1
-                if idx > series:
-                    raise ValueError("Runaway ceil")
+                if idx >= series:
+                    idx = 0
+                    base = E_fwd(series, 0)
+                    exponent += 1
+                    break
         else:
             raise ValueError('Mode has to be either "round", "ceil" or "floor". {} is not a valid mode'.format(mode))
 
